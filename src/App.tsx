@@ -308,7 +308,7 @@ const Contato: React.FC = () => {
             </p>
             <ul className="cta-points">
               <li>Análise da sua rotina de compras, balcão, estoque, financeiro e RH</li>
-              <li>Plano de implantação começando pela maior dor</li>
+              <li>Data da virada definida junto com você</li>
               <li>Resposta direto no seu WhatsApp</li>
             </ul>
           </div>
