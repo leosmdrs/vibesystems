@@ -8,6 +8,9 @@ const prefersReducedMotion = () =>
 /**
  * Cena Remotion embutida no site. Só é montada perto da viewport e só toca
  * enquanto está visível, para não pesar a página.
+ *
+ * O quadro de repouso é a cena já montada: se o navegador recusar o autoplay
+ * (ou com movimento reduzido), a simulação aparece completa em vez de vazia.
  */
 export const ScenePlayer: React.FC<{ id: CompId; className?: string; eager?: boolean }> = ({
   id,
@@ -15,10 +18,13 @@ export const ScenePlayer: React.FC<{ id: CompId; className?: string; eager?: boo
   eager = false,
 }) => {
   const spec = COMPOSITIONS[id];
+  // Antes do fade-out do loop, com todos os elementos já em cena.
+  const restFrame = spec.durationInFrames - 30;
   const wrapRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<PlayerRef>(null);
+  const startedRef = useRef(false);
   const [mounted, setMounted] = useState(eager);
-  const [visible, setVisible] = useState(eager);
+  const [visible, setVisible] = useState(false);
   const reduced = prefersReducedMotion();
 
   useEffect(() => {
@@ -27,9 +33,12 @@ export const ScenePlayer: React.FC<{ id: CompId; className?: string; eager?: boo
     const io = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) setMounted(true);
-        setVisible(entry.intersectionRatio > 0.25);
+        // Visível de verdade: pelo menos 25% da cena dentro da janela.
+        const r = entry.boundingClientRect;
+        const shown = Math.min(r.bottom, window.innerHeight) - Math.max(r.top, 0);
+        setVisible(r.height > 0 && shown / r.height > 0.25);
       },
-      { rootMargin: "300px 0px", threshold: [0, 0.25, 0.5] },
+      { rootMargin: "300px 0px", threshold: [0, 0.1, 0.25, 0.5, 0.75, 1] },
     );
     io.observe(el);
     return () => io.disconnect();
@@ -38,9 +47,27 @@ export const ScenePlayer: React.FC<{ id: CompId; className?: string; eager?: boo
   useEffect(() => {
     const p = playerRef.current;
     if (!p || reduced) return;
-    if (visible) p.play();
-    else p.pause();
-  }, [visible, mounted, reduced]);
+    if (!visible) {
+      p.pause();
+      // Nunca deixa a cena parada nos primeiros quadros (ainda vazios).
+      if (p.getCurrentFrame() < 20) p.seekTo(restFrame);
+      return;
+    }
+    if (!startedRef.current) {
+      startedRef.current = true;
+      p.seekTo(0);
+    }
+    const from = p.getCurrentFrame();
+    p.play();
+    // Se o quadro não avançou, o navegador não deixou tocar: mostra a cena montada.
+    const t = window.setTimeout(() => {
+      if (!p.isPlaying() || p.getCurrentFrame() === from) {
+        p.pause();
+        p.seekTo(restFrame);
+      }
+    }, 1200);
+    return () => window.clearTimeout(t);
+  }, [visible, mounted, reduced, restFrame]);
 
   return (
     <div
@@ -57,8 +84,8 @@ export const ScenePlayer: React.FC<{ id: CompId; className?: string; eager?: boo
           compositionHeight={spec.height}
           fps={FPS}
           loop
-          autoPlay={!reduced && visible}
-          initialFrame={reduced ? spec.durationInFrames - 30 : 0}
+          initiallyMuted
+          initialFrame={restFrame}
           controls={false}
           clickToPlay={false}
           doubleClickToFullscreen={false}
