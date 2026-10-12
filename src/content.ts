@@ -169,8 +169,8 @@ export const ETAPAS = [
     d: "A gente entra na sua operação, acompanha o balcão, o estoque e o financeiro e mapeia onde você perde tempo e dinheiro.",
   },
   {
-    t: "Implantação pela maior dor",
-    d: "Começamos pelo módulo que mais dói. Os outros entram no ritmo da sua equipe, sem parar a loja.",
+    t: "Virada com data marcada",
+    d: "Definimos juntos o dia da virada. Nessa data, todos os módulos entram em vigor ao mesmo tempo, já integrados.",
   },
   {
     t: "Treinamento por função",
@@ -199,8 +199,8 @@ export const GARANTIAS = [
 
 export const FAQ = [
   {
-    q: "Preciso trocar tudo de uma vez?",
-    a: "Não. A implantação é por módulo, começando pela dor mais urgente. Os módulos se conectam conforme entram.",
+    q: "Como funciona a implantação?",
+    a: "A virada acontece numa data definida junto com você. Nesse dia, Compras, PDV, Estoque, Financeiro e RH passam a operar ao mesmo tempo, já conversando entre si.",
   },
   {
     q: "Funciona para o meu segmento de varejo?",
